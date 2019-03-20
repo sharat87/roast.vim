@@ -1,0 +1,209 @@
+*roast.txt*  An HTTP client for ViM
+
+Author:  Shrikant Kandula <https://sharats.me>
+Repo:    https://github.com/sharat87/roast.vim
+License: See LICENSE file.
+
+USAGE                                                            *roast*
+
+Open (or create) a file with the extension of `.http` or `.roast` and the roast
+plugin will be active in that buffer. Now put the following text in that file
+and hit the <Enter> key while the cursor is on that line:
+>
+   GET http://httpbin.org/get answer=42
+<
+The output of this `GET` request should show up in a new vertically split
+window. The line itself should highlight in a shade of green. If the request
+was a failure, you'd see that the line would highlight in a shade red.
+
+
+FEATURES OVERVIEW                                               *roast-features*
+
+- Syntax roughly similar to HTTP protocol requests.
+- Headers apply to all requests below that header definition line.
+- A single session is used for all requests from a buffer. That is, cookies are
+  preserved across requests from a single buffer.
+- Simple string variables support that can be used for interpolation.
+- Variable interpolation is implemented with Python's `.format` syntax.
+- Variable interpolation works in request paths, query params, header values,
+  request bodies, other variable definitions.
+- Each line is parsed with Python's `shlex` module. That is, comments start with
+  `#`, quotes should be used to specify strings with special characters such as
+  spaces.
+
+A good place to find working examples would be the `python3/test_roast.py`
+module where several of the above features are tested.
+
+
+HEADERS                                                         *roast-headers*
+
+The syntax for setting headers is similar to how they appear in an actual HTTP
+request.
+>
+   Accept: application/json
+<
+This line will ensure that this header is set to all requests that are below
+this line. For example, consider the following file:
+>
+   GET /url/path/1
+   Accept: application/json
+   GET /url/path/2
+<
+If you place the cursor on the request for `/url/path/1` and hit <Enter>, the
+`Accept` header is not sent. If, however, you place the cursor on the request
+for `/url/path/2` and hit <Enter>, the header is sent. The header is sent for
+any and all requests below `/url/path/2` as well.
+
+The header can be given a different value somewhere down and that will be
+effective from that point on in the file.
+
+To remove the header, set the header with no value. Like:
+>
+   Accept:
+<
+No `Accept` header will be sent on the following requests.
+
+TODO: Write about the special handling of `Host` header. This header won't show
+up in the headers view.
+
+
+REQUEST QUERY PARAMS
+
+Query parameters can be given as part of the URL in the usual fashion,
+>
+   GET http://httpbin.org/get?key1=value1&key2=value2
+<
+Note that the URL is processed with python's `.format` with |roast-variables|
+so variable interpolation can be used here.
+
+But it is usually more convenient to use spaces that roast.vim allows instead
+of the `&` and `?` marks. The above can be written as:
+>
+   GET http://httpbin.org/get key1=value1 key2=value2
+<
+In this form, only the values support interpolation. For example,
+>
+   set answer 42
+   GET http://httpbin.org/get text=number_{answer}
+<
+This sends a request to the following URL:
+>
+   http://httpbin.org/get?text=number_42
+<
+There's also a shortcut for the following common use case:
+>
+   set answer 42
+   GET http://httpbin.org/get answer={answer}
+<
+This can be written as:
+>
+   set answer 42
+   GET http://httpbin.org/get answer
+<
+Both send request to the following URL:
+>
+   http://httpbin.org/get?answer=42
+<
+
+
+REQUEST BODY                                                *roast-post-body*
+
+The body for POST or other requests can be specified using heredoc-like syntax.
+This is best illustrated with an example:
+>
+   POST http://httpbin.org/post << body
+   here goes the post body
+   this content is passed to the POST request as-is.
+   body
+<
+The heredoc marker is `body` here. It can be any alphanumeric string.
+
+
+USING VARIABLES                                             *roast-variables*
+
+Variables allow for interpolation within braces and this lets us create nice
+little DSL's made up of HTTP APIs.
+
+The syntax to set a variable is as following:
+>
+   set name value
+<
+If the value contains spaces or special characters, it can be surrounded by
+quotes, similar to escaping semantics of a shell. Note the variable
+interpolations are allowed in the value part of this syntax.
+
+Variable interpolations are powered by Python's `str.format` method. If you're
+not familiar with that method, don't worry, here's what it looks like:
+>
+   set first_name Elijah
+   set last_name Baley
+   set full_name {first_name}_{last_name}
+<
+The variable `full_name` will be set to `Elijah_Baley`.
+
+Variable interpolations work in header values, URL's, query parameter values and
+other variable declarations. A variable can be set to a different value with the
+same file. Only the closest `set` above the current line will be taken into
+consideration.
+
+A neat shortcut regarding interpolation in query params is that it is possible
+to use params already set for interpolation in later params, with the name
+prefixed with the `@` symbol. That doesn't make sense, I know, but an example
+will click right away. Here it is:
+>
+  GET https://httpbin.org/get first=Jon last=Snow full={@first}_{@last}
+<
+Get it now? :)
+
+
+VIEWING RESPONSE                                       *roast-viewing-response*
+
+When a request is run (by hitting the <Enter> key, by default), a new window is
+opened by splitting vertically, unless a window is already displaying a roast
+result.
+
+This window will show the response of the query with json syntax highlighting if
+the appropriate response header is present.
+
+To view other details of the request/response, go to the window displaying a the
+result and hit <C-j> or <C-k> to cycle between several renderers of the response
+data.
+
+There is a provision for custom renderers, but it's not mature enough to be
+documented and encouraged in the wild. Coming soon.
+
+
+TIPS                                                           *roast-tips*
+
+1. Switch the host header between various staging servers of your app.
+
+For example, if we have http://dev.staging.example.com/ as our dev server and
+http://qa.staging.example.com/ as our QA server, we can set the host in our
+roast file in the first line like:
+>
+   Host: http://dev.staging.example.com/
+<
+With this, we can have a hotkey to switch this host between dev and QA hosts.
+This can be achieved with something like the following (to be put in
+~/.vim/after/ftplugin/roast.vim):
+
+>
+py3 import vim
+nnoremap <silent> <buffer> <LoacalLeader>d :py3 vim.current.buffer[0] = 'Host: http://dev.staging.example.com/'
+nnoremap <silent> <buffer> <LoacalLeader>q :py3 vim.current.buffer[0] = 'Host: http://qa.staging.example.com/'
+<
+
+Of course, this is very basic, it assumes the Host header is on the first line or
+overwrites that line when the hotkey is hit.
+
+
+More tips coming soon!
+
+
+ABOUT                                                         *roast-about*
+
+Roast plugin is developed by sharat87. Contributions welcome. If you notice
+a bug or have an idea for a feature request, please open an issue on GitHub.
+
+
+  vim:ft=help
