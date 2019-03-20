@@ -1,4 +1,16 @@
+"""
+Tests for the roast.vim plugin's core implementation.
+
+Tests written in this module should be able to run WITHOUT the vim module.
+"""
+
 import roast_api as ra
+
+
+def test_rest_methods_request():
+    assert ra.build_request(['PUT https://httpbin.org/put'], 0).method == 'PUT'
+    assert ra.build_request(['PATCH https://httpbin.org/PATCH'], 0).method == 'PATCH'
+    assert ra.build_request(['DELETE https://httpbin.org/DELETE'], 0).method == 'DELETE'
 
 
 def test_host_header():
@@ -69,3 +81,13 @@ def test_interpolation_with_other_params():
     ], 0)
 
     assert req.params == {'name': 'stark', 'answer': 'ans_by_stark'}
+
+
+def test_interpolation_in_headers():
+    req = ra.build_request([
+        'set fmt javascript',
+        'Accept: application/{fmt}',
+        'GET /get',
+    ], 2)
+
+    assert req.headers['accept'] == 'application/javascript'
