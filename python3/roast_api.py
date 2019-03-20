@@ -7,6 +7,8 @@ import shlex
 from itertools import takewhile
 from typing import List, Dict, Optional
 import json
+from pathlib import Path
+
 import requests
 
 
@@ -62,7 +64,11 @@ def build_request(lines, line_num) -> requests.Request:
     method, loc, *tokens = tokenize(line)
 
     heredoc = pop_heredoc(tokens)
-    body = '\n'.join(takewhile(lambda l: l != heredoc, lines[line_num + 1:])) if heredoc else None
+    if heredoc:
+        body = '\n'.join(takewhile(lambda l: l != heredoc, lines[line_num + 1:]))
+    else:
+        file_path = pop_file_body(tokens)
+        body = file_path.read_text() if file_path else None
 
     if 'host' in headers:
         url = headers.pop('host').rstrip('/') + '/' + loc.lstrip('/').format(**variables)
@@ -77,11 +83,23 @@ def build_request(lines, line_num) -> requests.Request:
 def pop_heredoc(tokens: List[str]) -> Optional[str]:
     heredoc = None
     if tokens and tokens[-1].startswith('<<'):
-        heredoc = tokens.pop().lstrip('<')
+        heredoc = tokens.pop()[2:]
     elif len(tokens) >= 2 and tokens[-2] == '<<':
         heredoc = tokens.pop()
         tokens.pop()
     return heredoc
+
+
+def pop_file_body(tokens: List[str]) -> Optional[Path]:
+    loc = None
+    if tokens and tokens[-1].startswith('<'):
+        loc = tokens.pop()[1:]
+    elif len(tokens) >= 2 and tokens[-2] == '<':
+        loc = tokens.pop()
+        tokens.pop()
+    return loc and Path(loc)
+
+
 
 
 def build_params_dict(tokens: List[str], variables: Dict[str, str] = None) -> Dict[str, str]:
