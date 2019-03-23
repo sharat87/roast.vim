@@ -1,4 +1,4 @@
-# roast.vim &beta;
+# roast.vim<sup>&beta;</sup>
 
 An http client as a ViM editor plugin. Utilizes the `+python3` feature. Not tested on Neovim. Known to work on ViM 8.1.
 
