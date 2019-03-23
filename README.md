@@ -4,6 +4,8 @@ An http client as a ViM editor plugin. Utilizes the `+python3` feature. Not test
 
 A 2&half; minutes video demo (no audio): <https://youtu.be/W2QKvJvR3dY>.
 
+Full docs in ViM format: [doc/roast.txt](https://github.com/sharat87/roast.vim/blob/master/doc/roast.txt).
+
 ## Run tests
 
 Go to the python3 directory and run `pytest .`, with Python 3.6 at least.
