@@ -95,7 +95,7 @@ def test_interpolation_in_headers():
 
 def test_variable_with_json_value():
     req = ra.build_request([
-        'set payload {{"username": "Sherlock", "password": "Moriarty"}}',
+        'set payload \'{{"username": "Sherlock", "password": "Moriarty"}}\'',
         'POST /post <<END',
         '{payload}',
         'END',

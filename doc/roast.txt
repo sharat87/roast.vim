@@ -159,7 +159,7 @@ A note about escaping braces in the context of interpolation. Braced should be
 doubled to escape. So, if we are defining a variable with a JSON value, the
 braces should be doubled so they won't be interpreted as interpolation targets.
 <
-   set payload {{"username": "Sherlock", "password": "Moriarty"}}
+   set payload '{{"username": "Sherlock", "password": "Moriarty"}}'
 >
 Here, the variable `payload` would be set to the following text:
 <

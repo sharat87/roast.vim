@@ -31,19 +31,17 @@ def build_request(lines, line_num) -> requests.Request:
             current_template.append(line)
             continue
 
-        if line.startswith('set '):
-            name, value = line[4:].strip().split(None, 1)
-            # Interpolations in variables are applied when the variable is defined.
-            variables[name] = value.format(**variables)
-            continue
-
         parts = tokenize(line)
         if len(parts) < 2:
             continue
 
         head, *rest = parts
 
-        if head == 'alias':
+        if head == 'set':
+            # Interpolations in variables are applied when the variable is defined.
+            variables[rest[0]] = ' '.join(rest[1:]).format(**variables)
+
+        elif head == 'alias':
             # Interpolations in aliases are applied when the alias is used.
             aliases[rest[0]] = ' '.join(rest[1:])
 
