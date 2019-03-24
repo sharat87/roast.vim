@@ -91,3 +91,14 @@ def test_interpolation_in_headers():
     ], 2)
 
     assert req.headers['accept'] == 'application/javascript'
+
+
+def test_variable_with_json_value():
+    req = ra.build_request([
+        'set payload {{"username": "Sherlock", "password": "Moriarty"}}',
+        'POST /post <<END',
+        '{payload}',
+        'END',
+    ], 1)
+
+    assert req.data == '{"username": "Sherlock", "password": "Moriarty"}'

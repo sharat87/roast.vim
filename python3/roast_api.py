@@ -31,17 +31,19 @@ def build_request(lines, line_num) -> requests.Request:
             current_template.append(line)
             continue
 
+        if line.startswith('set '):
+            name, value = line[4:].strip().split(None, 1)
+            # Interpolations in variables are applied when the variable is defined.
+            variables[name] = value.format(**variables)
+            continue
+
         parts = tokenize(line)
         if len(parts) < 2:
             continue
 
         head, *rest = parts
 
-        if head == 'set':
-            # Interpolations in variables are applied when the variable is defined.
-            variables[rest[0]] = ' '.join(rest[1:]).format(**variables)
-
-        elif head == 'alias':
+        if head == 'alias':
             # Interpolations in aliases are applied when the alias is used.
             aliases[rest[0]] = ' '.join(rest[1:])
 
@@ -69,6 +71,9 @@ def build_request(lines, line_num) -> requests.Request:
     else:
         file_path = pop_file_body(tokens)
         body = file_path.read_text() if file_path else None
+
+    if body:
+        body = body.format(**variables)
 
     if 'host' in headers:
         url = headers.pop('host').rstrip('/') + '/' + loc.lstrip('/').format(**variables)
