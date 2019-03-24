@@ -155,6 +155,18 @@ will click right away. Here it is:
 <
 Get it now? :)
 
+A note about escaping braces in the context of interpolation. Braced should be
+doubled to escape. So, if we are defining a variable with a JSON value, the
+braces should be doubled so they won't be interpreted as interpolation targets.
+<
+   set payload {{"username": "Sherlock", "password": "Moriarty"}}
+>
+Here, the variable `payload` would be set to the following text:
+<
+   {"username": "Sherlock", "password": "Moriarty"}
+>
+This is covered in the test `test_variable_with_json_value`.
+
 
 VIEWING RESPONSE                                       *roast-viewing-response*
 
