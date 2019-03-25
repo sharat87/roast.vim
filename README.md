@@ -14,5 +14,6 @@ Go to the python3 directory and run `pytest .`, with Python 3.6 at least.
 
 If you don't like this, or are looking for more http clients on ViM, here's a few options:
 
-1. [vial-http](https://github.com/baverman/vial-http) - Also built on Python.
-2. [vim-rest-console](https://github.com/diepm/vim-rest-console) - Powered by curl.
+1. [baverman/vial-http](https://github.com/baverman/vial-http) - Also built on Python.
+2. [diepm/vim-rest-console](https://github.com/diepm/vim-rest-console) - Powered by curl.
+3. [aquach/vim-http-client](https://github.com/aquach/vim-http-client) - Also Python + requests.
