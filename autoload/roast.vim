@@ -9,6 +9,7 @@ if (&bg ==? 'light')
     highlight default RoastCurrentFailure guibg=#F4DFD2 gui=bold
 else
     highlight default RoastCurrentSuccess guibg=#005A66 gui=bold
+    highlight default RoastCurrentFailure guibg=#700e01 gui=bold
 endif
 
 py3 import roast
