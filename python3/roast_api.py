@@ -103,8 +103,6 @@ def pop_file_body(tokens: List[str]) -> Optional[Path]:
     return loc and Path(loc)
 
 
-
-
 def build_params_dict(tokens: List[str], variables: Dict[str, str] = None) -> Dict[str, str]:
     if variables is None:
         variables = {}
@@ -126,22 +124,24 @@ def tokenize(text: str) -> List[str]:
 
 
 def render_pretty(buf, response):
-    actions = {'commands': ['call clearmatches()']}
+    blueprint = {'commands': ['call clearmatches()']}
     content_type = response.headers['content-type'].split(';')[0] if 'content-type' in response.headers else None
     if content_type == 'application/json':
         try:
-            actions['lines'] = json.dumps(response.json(), ensure_ascii=False, indent=2).splitlines()
+            blueprint['lines'] = json.dumps(response.json(), ensure_ascii=False, indent=2).splitlines()
         except json.JSONDecodeError:
-            actions['lines'] = response.text.splitlines()
-            actions['commands'].append('set filetype=txt')
-            actions['commands'].append('call matchaddpos("Error", range(1, line("$")))')
+            blueprint['commands'].append('set filetype=txt')
+            blueprint['commands'].append('call matchaddpos("Error", range(1, line("$")))')
         else:
-            actions['commands'].append('set filetype=json')
+            blueprint['commands'].append('set filetype=json')
 
-    else:
-        actions['lines'] = response.text.splitlines()
+    elif content_type == 'text/html':
+        blueprint['commands'].append('set filetype=html')
 
-    return actions
+    if not blueprint.get('lines'):
+        blueprint['lines'] = response.text.splitlines()
+
+    return blueprint
 
 
 def render_headers(buf, response):
