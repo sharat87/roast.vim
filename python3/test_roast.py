@@ -127,6 +127,3 @@ def test_headers_in_heredoc_should_be_ignored():
     assert req.url == 'https://httpbin.org/get'
     assert req.params == {'name': 'Sherlock'}
     assert req.headers == {}
-
-    resp = requests.Session().send(req.prepare())
-    resp.raise_for_status()
