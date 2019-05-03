@@ -18,8 +18,19 @@ def build_request(lines, line_num) -> requests.Request:
     aliases = {}
     templates = {}
     current_template = None
+    heredoc = None
 
+    # TODO: Need an actual parser.
     for line in lines[:line_num]:
+        if heredoc:
+            if line == heredoc:
+                heredoc = None
+            continue
+
+        heredoc = pop_heredoc(tokenize(line))
+        if heredoc:
+            continue
+
         stripped_line = line.strip()
         if not stripped_line or stripped_line.startswith('#'):
             continue

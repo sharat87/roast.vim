@@ -5,6 +5,7 @@ Tests written in this module should be able to run WITHOUT the vim module.
 """
 
 import roast_api as ra
+import requests
 
 
 def test_rest_methods_request():
@@ -111,3 +112,21 @@ def test_variable_with_json_value():
     ], 1)
 
     assert req.data == '{"username": "Sherlock", "password": "Moriarty"}'
+
+
+def test_headers_in_heredoc_should_be_ignored():
+    req = ra.build_request([
+        'POST /post <<END',
+        'x: y',
+        'END',
+        '',
+        'GET https://httpbin.org/get name=Sherlock',
+    ], -1)
+
+    assert req.method == 'GET'
+    assert req.url == 'https://httpbin.org/get'
+    assert req.params == {'name': 'Sherlock'}
+    assert req.headers == {}
+
+    resp = requests.Session().send(req.prepare())
+    resp.raise_for_status()
