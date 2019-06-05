@@ -14,9 +14,13 @@ endif
 
 py3 import roast
 
-command! -buffer RoastSSLVerify py3 roast.verify_ssl = True
-command! -buffer RoastSSLIgnore py3 roast.verify_ssl = False
-
 fun! roast#run()
     py3 roast.run()
+endfun
+
+fun! roast#show_error()
+    echohl Error
+    redraw
+    echomsg b:_roast_error
+    echohl None
 endfun

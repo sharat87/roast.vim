@@ -34,9 +34,9 @@ def run():
 
     try:
         response = sessions[vim.current.buffer.number].send(request.prepare(), verify=verify_ssl)
-    except requests.ConnectionError as e:
-        vim.current.buffer.vars['_roast_error'] = repr(e)
-        vim.command(f"echoerr b:_roast_error")
+    except OSError as e:
+        vim.current.buffer.vars['_roast_error'] = str(e)
+        vim.command(f"call roast#show_error()")
     else:
         show_response(response)
         highlight_line_text('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure')

@@ -106,7 +106,6 @@ def build_request(lines, line_num) -> requests.Request:
     if url_prefix:
         url = url_prefix.rstrip('/') + '/' + url.lstrip('/')
 
-    print(url)
     params = build_params_dict(tokens, variables)
 
     return requests.Request(method, url, headers, params=params, data=body)
