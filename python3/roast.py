@@ -21,6 +21,8 @@ import roast_api
 
 sessions = defaultdict(requests.Session)
 
+verify_ssl = True
+
 renderers = [
     'pretty',
     'headers',
@@ -31,7 +33,7 @@ def run():
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end)
 
     try:
-        response = sessions[vim.current.buffer.number].send(request.prepare())
+        response = sessions[vim.current.buffer.number].send(request.prepare(), verify=verify_ssl)
     except requests.ConnectionError as e:
         vim.current.buffer.vars['_roast_error'] = repr(e)
         vim.command(f"echoerr b:_roast_error")
