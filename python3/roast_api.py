@@ -8,6 +8,8 @@ from itertools import takewhile
 from typing import List, Dict, Optional
 import json
 from pathlib import Path
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
 
 import requests
 
@@ -137,7 +139,7 @@ def tokenize(text: str) -> List[str]:
 def render_pretty(buf, response):
     blueprint = {'commands': ['call clearmatches()']}
     content_type = response.headers['content-type'].split(';')[0] if 'content-type' in response.headers else None
-    if content_type == 'application/json':
+    if content_type.endswith('/json'):
         try:
             blueprint['lines'] = json.dumps(response.json(), ensure_ascii=False, indent=2).splitlines()
         except json.JSONDecodeError:
@@ -146,7 +148,16 @@ def render_pretty(buf, response):
         else:
             blueprint['commands'].append('set filetype=json')
 
-    elif content_type == 'text/html':
+    elif content_type.endswith('/xml'):
+        try:
+            blueprint['lines'] = minidom.parseString(response.text).toprettyxml().splitlines()
+        except ExpatError:
+            blueprint['commands'].append('set filetype=txt')
+            blueprint['commands'].append('call matchaddpos("Error", range(1, line("$")))')
+        else:
+            blueprint['commands'].append('set filetype=xml')
+
+    elif content_type.endswith('/html'):
         blueprint['commands'].append('set filetype=html')
 
     if not blueprint.get('lines'):
