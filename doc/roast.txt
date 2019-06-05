@@ -63,8 +63,27 @@ To remove the header, set the header with no value. Like:
 <
 No `Accept` header will be sent on the following requests.
 
-TODO: Write about the special handling of `Host` header. This header won't show
-up in the headers view.
+
+DIRECTIVES                                        *roast-directives* *roast-use*
+
+Roast has `use` directives that configure the behaviour of Roast. Currently,
+there only one directive that can be used with `use`:
+
+URL Prefix:                                                   *roast-url_prefix*
+>
+    use url_prefix https://httpbin.org
+<
+
+After this line, a request like `GET /url` would actually run a GET request to
+`https://httpbin.org/url`. The value given to `url_prefix` can contain path
+elements as well.
+
+To unset the `url_prefix`, don't provide a value, just like for headers. Like
+this:
+
+>
+    use url_prefix
+<
 
 
 REQUEST QUERY PARAMS
@@ -187,13 +206,13 @@ documented and encouraged in the wild. Coming soon.
 
 TIPS                                                           *roast-tips*
 
-1. Switch the host header between various staging servers of your app.
+1. Switch the `url_prefix` between various staging servers of your app.
 
 For example, if we have http://dev.staging.example.com/ as our dev server and
-http://qa.staging.example.com/ as our QA server, we can set the host in our
-roast file in the first line like:
+http://qa.staging.example.com/ as our QA server, we can set the `url_prefix` in
+our roast file in the first line like:
 >
-   Host: http://dev.staging.example.com/
+   use url_prefix http://dev.staging.example.com/
 <
 With this, we can have a hotkey to switch this host between dev and QA hosts.
 This can be achieved with something like the following (to be put in
@@ -201,12 +220,12 @@ This can be achieved with something like the following (to be put in
 
 >
 py3 import vim
-nnoremap <silent> <buffer> <LoacalLeader>d :py3 vim.current.buffer[0] = 'Host: http://dev.staging.example.com/'
-nnoremap <silent> <buffer> <LoacalLeader>q :py3 vim.current.buffer[0] = 'Host: http://qa.staging.example.com/'
+nnoremap <silent> <buffer> <LoacalLeader>d :py3 vim.current.buffer[0] = 'use url_prefix http://dev.staging.example.com/'
+nnoremap <silent> <buffer> <LoacalLeader>q :py3 vim.current.buffer[0] = 'use url_prefix http://qa.staging.example.com/'
 <
 
-Of course, this is very basic, it assumes the Host header is on the first line or
-overwrites that line when the hotkey is hit.
+Of course, this is very basic, it assumes the `url_prefix` directive is on the
+first line or overwrites that line when the hotkey is hit.
 
 
 More tips coming soon!

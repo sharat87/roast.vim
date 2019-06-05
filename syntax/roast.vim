@@ -20,8 +20,10 @@ syn match roastVerbHead "\v\c^HEAD\ze " nextgroup=roastPath skipwhite contains=r
 syn match roastVerbDelete "\v\c^DELETE\ze " nextgroup=roastPath skipwhite contains=roastInterpolated
 
 syn match roastSet "\v\c^set\ze " nextgroup=roastVarName skipwhite
-syn match roastVarName "\v\k+" contained nextgroup=roastVarVal skipwhite
-syn match roastVarVal "\v.+" contained contains=roastInterpolated
+syn match roastVarName "\v\k+" contained nextgroup=roastVal skipwhite
+syn match roastUse "\v\c^use\ze " nextgroup=roastUseName skipwhite
+syn match roastUseName "\v<(url_prefix)>" contained nextgroup=roastVal skipwhite
+syn match roastVal "\v.+" contained contains=roastInterpolated
 
 syn match roastTplKeyword "\v\c^template\ze " nextgroup=roastTplName skipwhite
 syn match roastTplName "\v\k+" contained
@@ -44,6 +46,8 @@ hi link roastHeaderVal String
 hi link roastJsonBody SpecialComment
 hi link roastSet Type
 hi link roastVarName Identifier
+hi link roastUse Type
+hi link roastUseName Identifier
 hi link roastTplKeyword Type
 hi link roastTplName Identifier
 hi link roastInterpolated Type

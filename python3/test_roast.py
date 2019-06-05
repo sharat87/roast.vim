@@ -138,3 +138,28 @@ def test_headers_in_heredoc_should_be_ignored():
     assert req.url == 'https://httpbin.org/get'
     assert req.params == {'name': 'Sherlock'}
     assert req.headers == {}
+
+
+def test_use_url_prefix():
+    req = ra.build_request([
+        'use url_prefix https://httpbin.org',
+        'GET /get name=Sherlock',
+    ], -1)
+
+    assert req.method == 'GET'
+    assert req.url == 'https://httpbin.org/get'
+    assert req.params == {'name': 'Sherlock'}
+    assert req.headers == {}
+
+
+def test_use_url_prefix_remove():
+    req = ra.build_request([
+        'use url_prefix https://httpbin.org',
+        'use url_prefix',
+        'GET /get name=Sherlock',
+    ], -1)
+
+    assert req.method == 'GET'
+    assert req.url == '/get'
+    assert req.params == {'name': 'Sherlock'}
+    assert req.headers == {}

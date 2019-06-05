@@ -15,6 +15,7 @@ import requests
 
 
 def build_request(lines, line_num) -> requests.Request:
+    config = {}
     headers = {}
     variables = {}
     aliases = {}
@@ -58,6 +59,12 @@ def build_request(lines, line_num) -> requests.Request:
             # Interpolations in aliases are applied when the alias is used.
             aliases[rest[0]] = ' '.join(rest[1:])
 
+        elif head == 'use':
+            if len(rest) > 1:
+                config[rest[0]] = ' '.join(rest[1:])
+            else:
+                del config[rest[0]]
+
         elif head.endswith(':'):
             key = head[:-1].lower()
             if rest:
@@ -86,11 +93,20 @@ def build_request(lines, line_num) -> requests.Request:
     if body:
         body = body.format(**variables)
 
-    if 'host' in headers:
-        url = headers.pop('host').rstrip('/') + '/' + loc.lstrip('/').format(**variables)
-    else:
-        url = loc.format(**variables)
+    url_prefix = None
+    if 'url_prefix' in config:
+        url_prefix = config['url_prefix']
+    elif 'host' in headers:
+        url_prefix = headers['host']
+        # TODO: Using host header this way is against the HTTP spec and should be removed. See issue #14.
+        if '/' in url_prefix or url_prefix.startswith('http:') or url_prefix.startswith('https:'):
+            del headers['host']
 
+    url = loc.format(**variables)
+    if url_prefix:
+        url = url_prefix.rstrip('/') + '/' + url.lstrip('/')
+
+    print(url)
     params = build_params_dict(tokens, variables)
 
     return requests.Request(method, url, headers, params=params, data=body)
