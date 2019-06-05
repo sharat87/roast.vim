@@ -33,7 +33,7 @@ def run():
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end)
 
     try:
-        response = sessions[vim.current.buffer.number].send(request.prepare(), verify=verify_ssl)
+        response = request.send(sessions[vim.current.buffer.number])
     except OSError as e:
         vim.current.buffer.vars['_roast_error'] = str(e)
         vim.command(f"call roast#show_error()")

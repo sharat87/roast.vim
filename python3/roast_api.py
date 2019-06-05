@@ -14,7 +14,28 @@ from xml.parsers.expat import ExpatError
 import requests
 
 
-def build_request(lines, line_num) -> requests.Request:
+class Request:
+    def __init__(self, method, url, headers, params=None, data=None, auth=None, verify_ssl=True):
+        self.method = method
+        self.url = url
+        self.headers = headers
+        self.params = params
+        self.data = data
+        self.auth = auth
+        self.verify_ssl = verify_ssl
+
+    def send(self, session: requests.Session = None) -> requests.Response:
+        session.auth = self.auth
+        return session.send(requests.Request(
+            self.method,
+            self.url,
+            self.headers,
+            params=self.params,
+            data=self.data,
+        ).prepare(), verify=self.verify_ssl)
+
+
+def build_request(lines, line_num) -> Request:
     config = {}
     headers = {}
     variables = {}
@@ -108,7 +129,7 @@ def build_request(lines, line_num) -> requests.Request:
 
     params = build_params_dict(tokens, variables)
 
-    return requests.Request(method, url, headers, params=params, data=body)
+    return Request(method, url, headers, params=params, data=body)
 
 
 def pop_heredoc(tokens: List[str]) -> Optional[str]:
