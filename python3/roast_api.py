@@ -45,7 +45,7 @@ def build_request(lines, line_num) -> requests.Request:
             continue
 
         parts = tokenize(line)
-        if len(parts) < 2:
+        if len(parts) < 1:
             continue
 
         head, *rest = parts

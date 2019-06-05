@@ -37,6 +37,17 @@ def test_header_collection():
     assert req.url == 'https://httpbin.org/get'
 
 
+def test_header_removal():
+    req = ra.build_request([
+        'Accept: application/json',
+        'X-Custom-Header: nonsense',
+        'Accept:',
+        'GET https://httpbin.org/get',
+    ], 3)
+
+    assert 'accept' not in req.headers
+
+
 def test_post_body():
     req = ra.build_request([
         'POST https://httpbin.org/post <<body',
