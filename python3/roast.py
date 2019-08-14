@@ -12,6 +12,7 @@ Inspiration / Ideas:
 """
 
 from collections import defaultdict
+import warnings
 
 import requests
 import vim
@@ -33,7 +34,9 @@ def run():
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end)
 
     try:
-        response = request.send(sessions[vim.current.buffer.number])
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore', requests.urllib3.exceptions.InsecureRequestWarning)
+            response = request.send(sessions[vim.current.buffer.number])
     except OSError as e:
         vim.current.buffer.vars['_roast_error'] = str(e)
         vim.command(f"call roast#show_error()")
