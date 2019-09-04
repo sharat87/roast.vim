@@ -50,11 +50,9 @@ def show_response(response: requests.Response):
     for window in vim.windows:
         if '_roast_renderer' in window.buffer.vars:
             workspace_window = window
-            roast_renderer_buf = window.buffer.vars['_roast_renderer']
-            if not isinstance(roast_renderer_buf, str):
-                workspace_renderer = roast_renderer_buf.decode()
-            else:
-                workspace_renderer = roast_renderer_buf
+            workspace_renderer = window.buffer.vars['_roast_renderer']
+            if not isinstance(workspace_renderer, str):
+                workspace_renderer = workspace_renderer.decode()
             break
 
     # Switch to workspace window.
