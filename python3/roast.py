@@ -30,16 +30,15 @@ renderers = [
 ]
 
 
-def run():
-    request = roast_api.build_request(vim.current.buffer, vim.current.range.end)
+def run(*, use=None):
+    request = roast_api.build_request(vim.current.buffer, vim.current.range.end, use_overrides=use)
 
     try:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', requests.urllib3.exceptions.InsecureRequestWarning)
             response = request.send(sessions[vim.current.buffer.number])
     except OSError as e:
-        vim.current.buffer.vars['_roast_error'] = str(e)
-        vim.command(f"call roast#show_error()")
+        show_error(str(e))
     else:
         show_response(response)
         highlight_line_text('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure')
@@ -88,6 +87,10 @@ def show_response(response: requests.Response):
         vim.command(f'keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
 
     vim.current.window = prev_window
+
+
+def show_error(message: str):
+    vim.command('echohl Error | redraw | echomsg ' + repr(message) + '| echohl None')
 
 
 def highlight_line_text(group):

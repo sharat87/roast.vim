@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
+import re
 
 import requests
 
@@ -35,7 +36,7 @@ class Request:
         ).prepare(), verify=self.verify_ssl)
 
 
-def build_request(lines, line_num) -> Request:
+def build_request(lines, line_num, *, use_overrides=None) -> Request:
     config = {}
     headers = {}
     variables = {}
@@ -114,6 +115,9 @@ def build_request(lines, line_num) -> Request:
     if body:
         body = body.format(**variables)
 
+    if use_overrides:
+        config.update(use_overrides)
+
     url_prefix = None
     if 'url_prefix' in config:
         url_prefix = config['url_prefix']
@@ -124,12 +128,17 @@ def build_request(lines, line_num) -> Request:
             del headers['host']
 
     url = loc.format(**variables)
-    if url_prefix:
+    if url_prefix and not re.match(r'https?://', url):
         url = url_prefix.rstrip('/') + '/' + url.lstrip('/')
 
     params = build_params_dict(tokens, variables)
 
-    return Request(method, url, headers, params=params, data=body)
+    # TODO: Use syntax like `use http_auth basic user password` instead.
+    auth = None
+    if 'http_auth_username' in config and 'http_auth_password' in config:
+        auth = config['http_auth_username'], config['http_auth_password']
+
+    return Request(method, url, headers, params=params, data=body, auth=auth)
 
 
 def pop_heredoc(tokens: List[str]) -> Optional[str]:
@@ -174,7 +183,7 @@ def tokenize(text: str) -> List[str]:
 
 def render_pretty(buf, response):
     blueprint = {'commands': ['call clearmatches()']}
-    content_type = response.headers['content-type'].split(';')[0] if 'content-type' in response.headers else None
+    content_type = response.headers['content-type'].split(';')[0] if 'content-type' in response.headers else 'text/html'
     if content_type.endswith('/json'):
         try:
             blueprint['lines'] = json.dumps(response.json(), ensure_ascii=False, indent=2).splitlines()
