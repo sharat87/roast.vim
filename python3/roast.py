@@ -13,6 +13,7 @@ Inspiration / Ideas:
 
 from collections import defaultdict
 import warnings
+from threading import Thread
 
 import requests
 import vim
@@ -29,19 +30,29 @@ renderers = [
     'headers',
 ]
 
+CURRENT_RESPONSE = None
+
 
 def run(*, use=None):
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end, use_overrides=use)
+    Thread(target=run_th, args=(request, vim.current.buffer.number), daemon=True).start()
 
+
+def run_th(request, buf_number):
+    global CURRENT_RESPONSE
     try:
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', requests.urllib3.exceptions.InsecureRequestWarning)
-            response = request.send(sessions[vim.current.buffer.number])
+            response = request.send(sessions[buf_number])
     except OSError as e:
         show_error(str(e))
     else:
-        show_response(response)
-        highlight_line_text('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure')
+        CURRENT_RESPONSE = response
+        vim.eval("timer_start(10, {_ -> py3eval('roast.show_response_current()')})")
+
+
+def show_response_current():
+    show_response(CURRENT_RESPONSE)
 
 
 def show_response(response: requests.Response):
@@ -89,12 +100,13 @@ def show_response(response: requests.Response):
         vim.command(f'keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
 
     vim.current.window = prev_window
+    highlight_line_text('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure')
 
 
 def show_error(message: str):
     vim.vars['__roast_error_message'] = message
-    vim.eval("timer_start(10, function('execute', [['echohl Error', 'redraw', 'echomsg g:__roast_error_message',"
-             " 'echohl None', 'unlet g:__roast_error_message']]))")
+    vim.eval("timer_start(10, {_ -> execute(['echohl Error', 'redraw', 'echomsg g:__roast_error_message',"
+             " 'echohl None', 'unlet g:__roast_error_message'], '')})")
 
 
 def highlight_line_text(group):
