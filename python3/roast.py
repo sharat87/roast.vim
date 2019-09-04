@@ -92,7 +92,9 @@ def show_response(response: requests.Response):
 
 
 def show_error(message: str):
-    vim.command('echohl Error | redraw | echomsg ' + repr(message) + '| echohl None')
+    vim.vars['__roast_error_message'] = message
+    vim.eval("timer_start(10, function('execute', [['echohl Error', 'redraw', 'echomsg g:__roast_error_message',"
+             " 'echohl None', 'unlet g:__roast_error_message']]))")
 
 
 def highlight_line_text(group):
