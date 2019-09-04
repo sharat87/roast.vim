@@ -35,10 +35,10 @@ CURRENT_RESPONSE = None
 
 def run(*, use=None):
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end, use_overrides=use)
-    Thread(target=run_th, args=(request, vim.current.buffer.number), daemon=True).start()
+    Thread(target=run_th, args=(request, vim.current.buffer.number, vim.current.range.end), daemon=True).start()
 
 
-def run_th(request, buf_number):
+def run_th(request, buf_number, line_number):
     global CURRENT_RESPONSE
     try:
         with warnings.catch_warnings():
@@ -49,6 +49,9 @@ def run_th(request, buf_number):
     else:
         CURRENT_RESPONSE = response
         vim.eval("timer_start(10, {_ -> py3eval('roast.show_response_current()')})")
+        vim.eval("timer_start(10, {_ -> py3eval('roast.highlight_line(\"" +
+                ('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure') +
+                '", ' + str(buf_number) + ', ' + str(line_number) + ")')})")
 
 
 def show_response_current():
@@ -100,7 +103,6 @@ def show_response(response: requests.Response):
         vim.command(f'keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
 
     vim.current.window = prev_window
-    highlight_line_text('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure')
 
 
 def show_error(message: str):
@@ -109,17 +111,23 @@ def show_error(message: str):
              " 'echohl None', 'unlet g:__roast_error_message'], '')})")
 
 
-def highlight_line_text(group):
-    match_id = int(vim.current.buffer.vars.get('_roast_match_id', 0))
+def highlight_line(group, buf_number, line_number):
+    match_id = int(vim.buffers[buf_number].vars.get('_roast_match_id', 0))
+
+    win = None
+    for win in vim.windows:
+        if win.buffer.number == buf_number:
+            break
 
     if match_id:
         try:
-            vim.eval(f'matchdelete({match_id})')
+            vim.eval(f'matchdelete({match_id})' if win is None else f'matchdelete({match_id}, {win.number})')
         except vim.error:
             # TODO: Only hide E803 error, which is thrown if this match_id has already been deleted.
             pass
 
-    vim.current.buffer.vars['_roast_match_id'] = vim.eval(f"matchadd('{group}', '\\V{vim.current.line}')")
+    vim.buffers[buf_number].vars['_roast_match_id'] = \
+            vim.eval(f"matchadd('{group}', '\\%{line_number + 1}l', 10, -1, {{'window': {win.number}}})")
 
 
 def apply_actions(buf, actions):
