@@ -30,12 +30,17 @@ renderers = [
     'headers',
 ]
 
+IS_NEOVIM = vim.eval("has('nvim')") == '1'
+
 CURRENT_RESPONSE = None
 
 
 def run(*, use=None):
     request = roast_api.build_request(vim.current.buffer, vim.current.range.end, use_overrides=use)
-    Thread(target=run_th, args=(request, vim.current.buffer.number, vim.current.range.end), daemon=True).start()
+    if IS_NEOVIM:
+        run_th(request, vim.current.buffer.number, vim.current.range.end)
+    else:
+        Thread(target=run_th, args=(request, vim.current.buffer.number, vim.current.range.end), daemon=True).start()
 
 
 def run_th(request, buf_number, line_number):
@@ -99,9 +104,7 @@ def show_response(response: requests.Response):
         actions = getattr(roast_api, f'render_{renderer}')(buf, response)
         apply_actions(buf, actions)
 
-    if vim.current.window is workspace_window:
-        vim.command(f'keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
-
+    vim.command(f'{workspace_window.number}windo keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
     vim.current.window = prev_window
 
 
@@ -140,7 +143,9 @@ def apply_actions(buf, actions):
 
 
 def next_render(delta=1):
-    renderer = vim.current.buffer.vars['_roast_renderer'].decode()
+    renderer = vim.current.buffer.vars['_roast_renderer']
+    if not isinstance(renderer, str):
+        renderer = renderer.decode()
     vim.command('buffer __roast_' + renderers[(renderers.index(renderer) + delta) % len(renderers)] + '__')
 
 
