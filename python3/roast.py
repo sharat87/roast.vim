@@ -55,8 +55,8 @@ def run_th(request, buf_number, line_number):
         CURRENT_RESPONSE = response
         vim.eval("timer_start(10, {_ -> py3eval('roast.show_response_current()')})")
         vim.eval("timer_start(10, {_ -> py3eval('roast.highlight_line(\"" +
-                ('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure') +
-                '", ' + str(buf_number) + ', ' + str(line_number) + ")')})")
+                 ('RoastCurrentSuccess' if response.ok else 'RoastCurrentFailure') +
+                 '", ' + str(buf_number) + ', ' + str(line_number) + ")')})")
 
 
 def show_response_current():
@@ -105,6 +105,8 @@ def show_response(response: requests.Response):
         apply_actions(buf, actions)
 
     vim.command(f'{workspace_window.number}windo keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
+    workspace_window.options['statusline'] = "Roast <%{get(b:, '_roast_renderer', 'N/A')}>  " + \
+            ('' if response.ok else '%#Error#') + " HTTP:" + str(response.status_code) + " %*  %{&ft}"
     vim.current.window = prev_window
 
 
