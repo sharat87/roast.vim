@@ -1,7 +1,7 @@
 let s:roast_ssl = 'verify'
-if exists(b:, 'roast_ssl')
+if exists('b:roast_ssl')
 	let s:roast_ssl = b:roast_ssl
-elseif exists(g:, 'roast_ssl')
+elseif exists('g:roast_ssl')
 	let s:roast_ssl = b:roast_ssl
 endif
 
