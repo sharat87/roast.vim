@@ -103,10 +103,10 @@ def show_response(response: requests.Response):
         buf.vars['_roast_renderer'] = renderer
         actions = getattr(roast_api, f'render_{renderer}')(buf, response)
         apply_actions(buf, actions)
+        workspace_window.options['statusline'] = "Roast <%{get(b:, '_roast_renderer', 'N/A')}>  " + \
+                ('' if response.ok else '%#Error#') + " HTTP:" + str(response.status_code) + " %*  %{&ft}"
 
     vim.command(f'{workspace_window.number}windo keepalt buffer __roast_{workspace_renderer or renderers[0]}__')
-    workspace_window.options['statusline'] = "Roast <%{get(b:, '_roast_renderer', 'N/A')}>  " + \
-            ('' if response.ok else '%#Error#') + " HTTP:" + str(response.status_code) + " %*  %{&ft}"
     vim.current.window = prev_window
 
 
