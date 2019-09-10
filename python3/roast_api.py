@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
+from jinja2 import Template
 import re
 
 import requests
@@ -75,7 +76,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
 
         if head == 'set':
             # Interpolations in variables are applied when the variable is defined.
-            variables[rest[0]] = ' '.join(rest[1:]).format(**variables)
+            variables[rest[0]] = Template(' '.join(rest[1:])).render(**variables)
 
         elif head == 'alias':
             # Interpolations in aliases are applied when the alias is used.
@@ -90,7 +91,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
         elif head.endswith(':'):
             key = head[:-1].lower()
             if rest:
-                headers[key] = ' '.join(rest).format(**variables)
+                headers[key] = Template(' '.join(rest)).render(**variables)
             else:
                 del headers[key]
 
@@ -113,7 +114,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
         body = file_path.read_text() if file_path else None
 
     if body:
-        body = body.format(**variables)
+        body = Template(body).render(**variables)
 
     if use_overrides:
         config.update(use_overrides)
@@ -127,7 +128,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
         if '/' in url_prefix or url_prefix.startswith('http:') or url_prefix.startswith('https:'):
             del headers['host']
 
-    url = loc.format(**variables)
+    url = Template(loc).render(**variables)
     if url_prefix and not re.match(r'https?://', url):
         url = url_prefix.rstrip('/') + '/' + url.lstrip('/')
 
@@ -169,10 +170,10 @@ def build_params_dict(tokens: List[str], variables: Dict[str, str] = None) -> Di
     for var in tokens:
         if '=' in var:
             name, value = var.split('=', 1)
-            value = value.format(**variables)
+            value = Template(value).render(**variables)
         else:
             name, value = var, variables[var]
-        params[name] = variables['@' + name] = value
+        params[name] = variables[name] = value
 
     return params
 

@@ -72,7 +72,7 @@ def test_params_with_special():
 def test_variable_interpolation_in_params():
     req = ra.build_request([
         'set answer 42',
-        'GET https://httpbin.org/get answer=num_{answer}',
+        'GET https://httpbin.org/get answer=num_{{answer}}',
     ], 1)
 
     assert req.params == {'answer': 'num_42'}
@@ -89,7 +89,7 @@ def test_interpolation_shortcut_in_params():
 
 def test_interpolation_with_other_params():
     req = ra.build_request([
-        'GET https://httpbin.org/get name=stark answer=ans_by_{@name}',
+        'GET https://httpbin.org/get name=stark answer=ans_by_{{name}}',
     ], 0)
 
     assert req.params == {'name': 'stark', 'answer': 'ans_by_stark'}
@@ -98,7 +98,7 @@ def test_interpolation_with_other_params():
 def test_interpolation_in_headers():
     req = ra.build_request([
         'set fmt javascript',
-        'Accept: application/{fmt}',
+        'Accept: application/{{fmt}}',
         'GET /get',
     ], 2)
 
@@ -116,9 +116,9 @@ def test_quoted_variable():
 
 def test_variable_with_json_value():
     req = ra.build_request([
-        'set payload \'{{"username": "Sherlock", "password": "Moriarty"}}\'',
+        """set payload '{"username": "Sherlock", "password": "Moriarty"}'""",
         'POST /post <<END',
-        '{payload}',
+        '{{payload}}',
         'END',
     ], 1)
 
