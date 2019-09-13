@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
+from jinja2 import Template
 import re
 
 import requests
@@ -34,6 +35,17 @@ class Request:
             params=self.params,
             data=self.data,
         ).prepare(), verify=self.verify_ssl)
+
+
+def render_body(body: str, heredoc: str, variables: Dict[str, str]):
+    if heredoc is None:
+        return body.format(**variables)
+    heredoc = heredoc.lower()
+    if heredoc in ('raw', 'json'):
+        return body
+    if heredoc == 'jinja2':
+        return Template(body).render(**variables)
+    return body.format(**variables)
 
 
 def build_request(lines, line_num, *, use_overrides=None) -> Request:
@@ -107,13 +119,14 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
 
     heredoc = pop_heredoc(tokens)
     if heredoc:
-        body = '\n'.join(takewhile(lambda l: l != heredoc, lines[line_num + 1:]))
+        body = '\n'.join(
+            takewhile(lambda l: l != heredoc, lines[line_num + 1:]))
     else:
         file_path = pop_file_body(tokens)
         body = file_path.read_text() if file_path else None
 
     if body:
-        body = body.format(**variables)
+        body = render_body(body, heredoc, variables);
 
     if use_overrides:
         config.update(use_overrides)
@@ -183,22 +196,27 @@ def tokenize(text: str) -> List[str]:
 
 def render_pretty(buf, response):
     blueprint = {'commands': ['call clearmatches()']}
-    content_type = response.headers['content-type'].split(';')[0] if 'content-type' in response.headers else 'text/html'
+    content_type = response.headers['content-type'].split(
+        ';')[0] if 'content-type' in response.headers else 'text/html'
     if content_type.endswith('/json'):
         try:
-            blueprint['lines'] = json.dumps(response.json(), ensure_ascii=False, indent=2).splitlines()
+            blueprint['lines'] = json.dumps(
+                response.json(), ensure_ascii=False, indent=2).splitlines()
         except json.JSONDecodeError:
             blueprint['commands'].append('set filetype=txt')
-            blueprint['commands'].append('call matchaddpos("Error", range(1, line("$")))')
+            blueprint['commands'].append(
+                'call matchaddpos("Error", range(1, line("$")))')
         else:
             blueprint['commands'].append('set filetype=json')
 
     elif content_type.endswith('/xml'):
         try:
-            blueprint['lines'] = minidom.parseString(response.text).toprettyxml().splitlines()
+            blueprint['lines'] = minidom.parseString(
+                response.text).toprettyxml().splitlines()
         except ExpatError:
             blueprint['commands'].append('set filetype=txt')
-            blueprint['commands'].append('call matchaddpos("Error", range(1, line("$")))')
+            blueprint['commands'].append(
+                'call matchaddpos("Error", range(1, line("$")))')
         else:
             blueprint['commands'].append('set filetype=xml')
 
