@@ -1,6 +1,6 @@
 # roast.vim<sup>&beta;</sup>
 
-![vim-roast](vim-roast.gif)
+![Roast demo GIF](roast-demo.gif)
 
 An http client as a ViM editor plugin. Utilizes the `+python3` feature. Not tested on Neovim. Known to work on ViM 8.1.
 
