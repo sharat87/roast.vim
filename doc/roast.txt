@@ -137,6 +137,41 @@ This is best illustrated with an example:
 <
 The heredoc marker is `body` here. It can be any alphanumeric string.
 
+Mark the heredoc as `raw` to avoid any variable interpolation:
+
+>
+  POST http://httpbin.org/post << RAW
+  {
+    "username": "Sherlock",
+    "password": "Moriarty"
+  }
+  RAW
+<
+
+The verbatim JSON string will be sent as body.
+
+Mark the heredoc as `jinja2` to render the body with the jinja2 template:
+
+>
+   set name Sherlock
+   set password Moriarty
+   POST http://httpbin.org/post << JINJA2
+   {
+     "username": "{{name}}",
+     "password": "{{password}}"
+   }
+   JINJA2
+<
+
+The variables will be used to render the body and the final body would be
+like:
+
+>
+  {
+    "username": "Sherlock",
+    "password": "Moriarty"
+  }
+<
 
 USING VARIABLES                                             *roast-variables*
 
