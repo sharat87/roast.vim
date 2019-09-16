@@ -119,20 +119,21 @@ def show_error(message: str):
 def highlight_line(group, buf_number, line_number):
     match_id = int(vim.buffers[buf_number].vars.get('_roast_match_id', 0))
 
-    win = None
-    for win in vim.windows:
-        if win.buffer.number == buf_number:
-            break
-
     if match_id:
+        win = None
+        for win in vim.windows:
+            if win.buffer.number == buf_number:
+                break
+
         try:
             vim.eval(f'matchdelete({match_id})' if win is None else f'matchdelete({match_id}, {win.number})')
         except vim.error:
             # TODO: Only hide E803 error, which is thrown if this match_id has already been deleted.
             pass
 
-    vim.buffers[buf_number].vars['_roast_match_id'] = \
-            vim.eval(f"matchadd('{group}', '\\%{line_number + 1}l', 10, -1, {{'window': {win.number}}})")
+    vim.buffers[buf_number].vars['_roast_match_id'] = vim.eval(
+        fr"matchadd('{group}', '\V' . escape(getbufline({buf_number}, {line_number + 1})[0], '\'))"
+    )
 
 
 def apply_actions(buf, actions):
