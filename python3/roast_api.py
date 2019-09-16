@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
+from jinja2 import Template
 import re
 
 import requests
@@ -34,6 +35,17 @@ class Request:
             params=self.params,
             data=self.data,
         ).prepare(), verify=self.verify_ssl)
+
+
+def render_body(body: str, heredoc: str, variables: Dict[str, str]):
+    if heredoc is None:
+        return body.format(**variables)
+    heredoc = heredoc.lower()
+    if heredoc in ('raw', 'json'):
+        return body
+    if heredoc == 'jinja2':
+        return Template(body).render(**variables)
+    return body.format(**variables)
 
 
 def build_request(lines, line_num, *, use_overrides=None) -> Request:
@@ -113,7 +125,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
         body = file_path.read_text() if file_path else None
 
     if body:
-        body = body.format(**variables)
+        body = render_body(body, heredoc, variables);
 
     if use_overrides:
         config.update(use_overrides)

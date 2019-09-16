@@ -125,6 +125,25 @@ def test_variable_with_json_value():
     assert req.data == '{"username": "Sherlock", "password": "Moriarty"}'
 
 
+def test_json_heredoc_should_be_raw():
+    req = ra.build_request([
+        'set payload test',
+        'POST /post <<JSON',
+        '{"payload": "my val"}',
+        'JSON',
+    ], 1)
+    assert req.data == '{"payload": "my val"}'
+
+
+def test_heredoc_jinja2():
+    req = ra.build_request([
+        'set payload test',
+        'POST /post <<JINJA2',
+        '{"payload": "{{payload}}"}',
+        'JINJA2',
+    ],1)
+    assert req.data == '{"payload": "test"}'
+
 def test_headers_in_heredoc_should_be_ignored():
     req = ra.build_request([
         'POST /post <<END',
