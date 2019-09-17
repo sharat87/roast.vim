@@ -61,6 +61,19 @@ def test_post_body():
     assert req.data == 'one=1\ntwo=2'
 
 
+def test_post_body_with_space_heredoc():
+    req = ra.build_request([
+        'POST https://httpbin.org/post << body',
+        'one=1',
+        'two=2',
+        'body',
+        'three=3',
+    ], 0)
+
+    assert req.method == 'POST'
+    assert req.data == 'one=1\ntwo=2'
+
+
 def test_params_with_special():
     req = ra.build_request([
         'GET https://httpbin.org/get answer="forty two" more="one=two=three"',

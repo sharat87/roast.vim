@@ -41,7 +41,7 @@ def render_body(body: str, heredoc: str, variables: Dict[str, str]):
     if heredoc is None:
         return body.format(**variables)
     heredoc = heredoc.lower()
-    if heredoc in ('raw', 'json'):
+    if heredoc in {'raw', 'json'}:
         return body
     if heredoc == 'jinja2':
         return Template(body).render(**variables)
@@ -57,7 +57,6 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
     current_template = None
     heredoc = None
 
-    # TODO: Need an actual parser.
     for line in lines[:line_num]:
         if heredoc:
             if line == heredoc:
@@ -125,7 +124,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
         body = file_path.read_text() if file_path else None
 
     if body:
-        body = render_body(body, heredoc, variables);
+        body = render_body(body, heredoc, variables)
 
     if use_overrides:
         config.update(use_overrides)
@@ -155,9 +154,7 @@ def build_request(lines, line_num, *, use_overrides=None) -> Request:
 
 def pop_heredoc(tokens: List[str]) -> Optional[str]:
     heredoc = None
-    if tokens and tokens[-1].startswith('<<'):
-        heredoc = tokens.pop()[2:]
-    elif len(tokens) >= 2 and tokens[-2] == '<<':
+    if len(tokens) >= 2 and tokens[-2] == '<<':
         heredoc = tokens.pop()
         tokens.pop()
     return heredoc
@@ -190,7 +187,9 @@ def build_params_dict(tokens: List[str], variables: Dict[str, str] = None) -> Di
 
 
 def tokenize(text: str) -> List[str]:
-    return shlex.split(text, comments=True)
+    sl = shlex.shlex(text, posix=True, punctuation_chars='<')
+    sl.whitespace_split = True
+    return list(sl)
 
 
 def render_pretty(buf, response):

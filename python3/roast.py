@@ -132,7 +132,7 @@ def highlight_line(group, buf_number, line_number):
             pass
 
     vim.buffers[buf_number].vars['_roast_match_id'] = vim.eval(
-        fr"matchadd('{group}', '\V' . escape(getbufline({buf_number}, {line_number + 1})[0], '\'))"
+        fr"matchadd('{group}', '\V' . escape(getbufline({buf_number}, {line_number + 1})[0], '\') . '\$')"
     )
 
 
