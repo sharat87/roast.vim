@@ -10,10 +10,14 @@ import json
 from pathlib import Path
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
-from jinja2 import Template
 import re
 
 import requests
+
+try:
+    from jinja2 import Template
+except ImportError:
+    Template = None
 
 
 class Request:
@@ -41,10 +45,15 @@ def render_body(body: str, heredoc: str, variables: Dict[str, str]):
     if heredoc is None:
         return body.format(**variables)
     heredoc = heredoc.lower()
+
     if heredoc in {'raw', 'json'}:
         return body
+
     if heredoc == 'jinja2':
+        if Template is None:
+            raise ValueError('Jinja2 is not available. Please `pip install jinja2` before using.')
         return Template(body).render(**variables)
+
     return body.format(**variables)
 
 
