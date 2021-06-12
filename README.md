@@ -1,3 +1,5 @@
+🚨 I'm working an in-browser version of an idea roughly similar to this plugin. Please check out [Prestige](https://prestigemad.com), which is also [open source](https://github.com/sharat87/prestige).
+
 # roast.vim<sup>&beta;</sup>
 
 ![Roast demo GIF](roast-demo.gif)
